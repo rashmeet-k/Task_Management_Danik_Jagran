@@ -1110,6 +1110,37 @@ app.get('/api/users/me', authenticateToken, async (req: AuthenticatedRequest, re
   );
 
   if (!user) {
+    if (req.user && req.user.email) {
+      if (typeof db.empIdCounter !== 'number') {
+        db.empIdCounter = db.users.reduce((max: number, u: any) => {
+          const match = (u.empId || '').match(/^EMP-(\d+)$/);
+          return match ? Math.max(max, parseInt(match[1], 10)) : max;
+        }, 0);
+      }
+      db.empIdCounter += 1;
+      const empId = 'EMP-' + db.empIdCounter.toString().padStart(4, '0');
+      
+      const newUser = {
+        id: req.user.id || ('U' + Date.now()),
+        empId,
+        name: req.user.name || req.user.email.split('@')[0],
+        email: req.user.email,
+        role: (req.user.email.toLowerCase() === 'admin@example.com' || req.user.email.toLowerCase() === 'rashmeet1309@gmail.com') ? 'Admin' : 'Team Member',
+        phone: '',
+        department: 'N/A',
+        bureau: 'Kanpur Bureau / Print',
+        taskCount: '0/0',
+        active: true,
+        avatar: (req.user as any).picture || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+        passwordHash: ''
+      };
+      
+      db.users.push(newUser);
+      await writeDbDataAsync(db);
+      res.json(newUser);
+      return;
+    }
+
     res.status(404).json({ message: 'User not found' });
     return;
   }

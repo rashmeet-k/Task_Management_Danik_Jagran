@@ -51,18 +51,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             headers: { 'Authorization': `Bearer ${currentToken}` }
           });
           
-          if (backendRes.status === 404 || backendRes.status === 403) {
-            // User was deleted by an admin
-            if (auth.currentUser) {
-              await auth.currentUser.delete().catch(() => {});
-            }
+          if (backendRes.status === 404 || backendRes.status === 410) {
+            // User does not exist or was explicitly deleted
             await signOut(auth);
             localStorage.removeItem('token');
             setToken(null);
             setUser(null);
             setLoading(false);
-            alert('Your account has been deleted by an administrator and you can no longer log in.');
+            alert('Your account is not active or has been disabled. Please contact an administrator.');
             return; // Stop further profile fetching
+          } else if (backendRes.status === 401 || backendRes.status === 403) {
+            // Token expired or invalid
+            const resData = await backendRes.json().catch(() => ({}));
+            if (resData.message === 'User has been deleted') {
+               await signOut(auth);
+               localStorage.removeItem('token');
+               setToken(null);
+               setUser(null);
+               setLoading(false);
+               alert('Your account has been deleted by an administrator and you can no longer log in.');
+               return;
+            }
+            // Just refresh token or proceed, but don't delete account
           }
         } catch (fetchErr) {
           console.warn("Backend validation check failed:", fetchErr);
