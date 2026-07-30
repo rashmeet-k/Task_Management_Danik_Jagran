@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-blue-500: #00adef;
+  --color-blue-600: #00adef;
+  --color-blue-700: #0096d1;
+  --color-blue-800: #0076a3;
+}
+
+:root.dark {
+  --color-white: #1e293b;
+  --color-slate-50: #0f121d;
+  --color-slate-100: #334155;
+  --color-slate-200: #475569;
+  --color-slate-300: #475569;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #cbd5e1;
+  --color-slate-600: #e2e8f0;
+  --color-slate-700: #f1f5f9;
+  --color-slate-800: #f8fafc;
+  --color-slate-900: #ffffff;
+
+  --color-blue-50: #1e3a8a;
+  --color-blue-100: #1e40af;
+  --color-blue-200: #1d4ed8;
+  
+  --color-emerald-50: #064e3b;
+  --color-emerald-100: #065f46;
+  
+  --color-amber-50: #451a03;
+  --color-amber-100: #78350f;
+  
+  --color-red-50: #450a0a;
+  --color-red-100: #7f1d1d;
+  
+  --color-cyan-50: #083344;
+  --color-cyan-100: #164e63;
+  
+  --color-indigo-50: #312e81;
+  --color-indigo-100: #3730a3;
+  
+  --color-sky-50: #0c4a6e;
+  --color-sky-100: #075985;
+}

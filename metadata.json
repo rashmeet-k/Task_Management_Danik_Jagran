@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Remix: Newsroom Central",
+  "description": "A comprehensive task management and progress tracking platform designed for managing newsroom operations, projects, tasks, and team collaborations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
