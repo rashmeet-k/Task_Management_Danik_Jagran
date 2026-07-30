@@ -264,7 +264,7 @@ export const Projects: React.FC = () => {
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
-  const canManage = user?.role === 'Admin' || user?.role === 'Project Manager';
+  const canCreate = user?.role === 'Admin';
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
@@ -276,7 +276,7 @@ export const Projects: React.FC = () => {
           <p className="font-sans text-xs text-slate-400 mt-1.5 font-medium uppercase tracking-wider">Manage and track all ongoing newsroom projects.</p>
         </div>
         
-        {canManage && (
+        {canCreate && (
           <button
             onClick={() => { resetForm(); setShowCreateForm(!showCreateForm); }}
             className="flex items-center gap-1.5 bg-[#00adef] hover:bg-sky-500 text-white font-sans text-xs font-bold px-3 py-2.5 rounded-lg shadow-md transition-all self-start"

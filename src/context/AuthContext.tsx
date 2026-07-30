@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Security check: ensure user still exists in the backend database
       // If deleted by an admin, the backend will return 404
       const currentToken = localStorage.getItem('token');
+      let backendUserData = null;
       if (currentToken) {
         try {
           const backendRes = await fetch('/api/users/me', {
@@ -72,21 +73,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                alert('Your account has been deleted by an administrator and you can no longer log in.');
                return;
             }
-            // Just refresh token or proceed, but don't delete account
+          } else if (backendRes.ok) {
+            backendUserData = await backendRes.json();
           }
         } catch (fetchErr) {
           console.warn("Backend validation check failed:", fetchErr);
         }
       }
 
+      if (backendUserData) {
+        setUser(backendUserData as User);
+        setLoading(false);
+        return;
+      }
+
       const userDoc = await getDoc(doc(db, 'users', uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        
-        // Force admin for specific email if they somehow got downgraded or registered before the fix
-        if (email.toLowerCase() === 'rashmeet1309@gmail.com' || email.toLowerCase() === 'admin@example.com') {
-          userData.role = 'Admin';
-        }
         
         setUser({ id: uid, ...userData } as User);
       } else {

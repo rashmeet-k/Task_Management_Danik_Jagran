@@ -190,8 +190,8 @@ export const Dashboard: React.FC = () => {
       {/* Middle row: Bar Chart & Milestones (& Recent Activity if visible) */}
       <div className={`grid grid-cols-1 ${user?.role === 'Team Member' ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-6`}>
         
-        {/* Recent Activity timeline (Hidden for Team Members) */}
-        {user?.role !== 'Team Member' && (
+        {/* Recent Activity timeline (Hidden for Team Members and Project Managers) */}
+        {user?.role === 'Admin' && (
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col ">
             <div className="flex justify-between items-center mb-6">
               <h2 className="font-sans font-bold text-sm text-slate-500 uppercase tracking-wider">RECENT ACTIVITY</h2>

@@ -207,7 +207,7 @@ export const SearchPage: React.FC = () => {
           )}
 
           {/* Activities hits */}
-          {results.activities?.length > 0 && (
+          {user?.role === 'Admin' && results.activities?.length > 0 && (
             <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
               <h2 className="font-sans font-bold text-sm text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-amber-500" /> Recent Activity ({results.activities.length})

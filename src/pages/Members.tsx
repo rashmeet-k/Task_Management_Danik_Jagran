@@ -5,7 +5,7 @@ import { Search, Plus, UserPlus, Trash2, Edit2, ShieldAlert, Eye, X } from 'luci
 import { ConfirmModal } from '../components/ConfirmModal';
 
 export const Members: React.FC = () => {
-  const { user, token } = useAuth();
+  const { user, token, updateProfile, fetchProfile, logout } = useAuth();
   const [members, setMembers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'role'>('name');
@@ -80,6 +80,13 @@ export const Members: React.FC = () => {
       });
 
       if (res.ok) {
+        const uId = user?.id || (user as any)?._id;
+        if (editId === uId || (editId && String(editId) === String(uId))) {
+          updateProfile({ name: formName, phone: formPhone, department: formDept, role: formRole, bureau: formBureau });
+          if (formRole !== user?.role) {
+            setTimeout(fetchProfile, 500); // re-fetch to assure all state updates
+          }
+        }
         fetchMembers();
         handleCloseForm();
       } else {
@@ -115,6 +122,14 @@ export const Members: React.FC = () => {
         body: JSON.stringify({ active: !u.active })
       });
       if (res.ok) {
+        if (uid === user?.id) {
+          if (!u.active) {
+            updateProfile({ active: true });
+          } else {
+            logout();
+            return;
+          }
+        }
         fetchMembers();
       }
     } catch (err) {
@@ -136,6 +151,10 @@ export const Members: React.FC = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
+        if (targetId === user?.id) {
+          logout();
+          return;
+        }
         setMembers(prev => prev.filter(u => u.id !== targetId && (u as any)._id !== targetId));
       } else {
         const err = await res.json().catch(() => ({})).catch(() => ({}));

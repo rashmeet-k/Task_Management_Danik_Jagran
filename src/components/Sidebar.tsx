@@ -27,7 +27,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath }) => {
   const role = user?.role || 'Team Member';
 
   const menuItems = allMenuItems.filter(item => {
-    if (item.path === '/reports' || item.path === '/activity') {
+    if (item.path === '/activity') {
+      return role === 'Admin';
+    }
+    if (item.path === '/reports') {
       return role === 'Admin' || role === 'Project Manager';
     }
     return true;

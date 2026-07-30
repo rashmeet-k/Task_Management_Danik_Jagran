@@ -223,14 +223,21 @@ app.get('/api/dashboard/stats', authenticateToken, async (req: AuthenticatedRequ
     };
   }
 
+  let filteredProjects = db.projects;
+  if (role === 'Project Manager') {
+    filteredProjects = db.projects.filter((p: any) => p.managerId === userId || (p.members || []).includes(userId));
+  } else if (role === 'Team Member') {
+    filteredProjects = db.projects.filter((p: any) => (p.members || []).includes(userId));
+  }
+
   res.json({
     stats: dashboardStats,
     projectStatusDistribution: {
-      inProgress: db.projects.filter((p: any) => p.status === 'In Progress').length,
-      pending: db.projects.filter((p: any) => p.status === 'Pending').length,
-      review: db.projects.filter((p: any) => p.status === 'Review').length,
-      completed: db.projects.filter((p: any) => p.status === 'Completed').length,
-      onHold: db.projects.filter((p: any) => p.status === 'On Hold' || p.status === 'Planning').length,
+      inProgress: filteredProjects.filter((p: any) => p.status === 'In Progress').length,
+      pending: filteredProjects.filter((p: any) => p.status === 'Pending').length,
+      review: filteredProjects.filter((p: any) => p.status === 'Review').length,
+      completed: filteredProjects.filter((p: any) => p.status === 'Completed').length,
+      onHold: filteredProjects.filter((p: any) => p.status === 'On Hold' || p.status === 'Planning').length,
     }
   });
 });
@@ -1109,6 +1116,21 @@ app.get('/api/users/me', authenticateToken, async (req: AuthenticatedRequest, re
     (u.email && userEmail && u.email.toLowerCase() === userEmail.toLowerCase())
   );
 
+  const isDeleted = db.deletedUsers?.some((du: any) => 
+    (userEmail && du.email?.toLowerCase() === userEmail.toLowerCase()) || 
+    (userId && du.id === userId)
+  );
+
+  if (isDeleted) {
+    res.status(410).json({ message: 'User has been deleted' });
+    return;
+  }
+
+  if (user && user.active === false) {
+    res.status(410).json({ message: 'User has been deactivated' });
+    return;
+  }
+
   if (!user) {
     if (req.user && req.user.email) {
       if (typeof db.empIdCounter !== 'number') {
@@ -1376,11 +1398,19 @@ app.delete('/api/users/:id', authenticateToken, async (req: AuthenticatedRequest
 // MILESTONES & ACTIVITIES ENDPOINTS
 // ----------------------------------------------------
 
-app.get('/api/milestones', authenticateToken, async (req: Request, res: Response) => {
+app.get('/api/milestones', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const db = await getDbDataAsync();
   const allMilestones: any[] = [];
-  if (db.projects) {
-    db.projects.forEach((project: any) => {
+  
+  let allowedProjects = db.projects || [];
+  if (req.user?.role === 'Project Manager') {
+    allowedProjects = allowedProjects.filter((p: any) => p.managerId === req.user?.id || (p.members || []).includes(req.user?.id));
+  } else if (req.user?.role === 'Team Member') {
+    allowedProjects = allowedProjects.filter((p: any) => (p.members || []).includes(req.user?.id));
+  }
+
+  if (allowedProjects.length > 0) {
+    allowedProjects.forEach((project: any) => {
       if (project.timeline && Array.isArray(project.timeline)) {
         project.timeline.forEach((m: any, index: number) => {
           allMilestones.push({
@@ -1498,22 +1528,35 @@ app.put('/api/user-alerts/read-all', authenticateToken, async (req: Authenticate
 
 app.get('/api/reports/data', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const db = await getDbDataAsync();
-  const tasks = db.tasks;
-  const users = db.users;
+  
+  let allowedProjects = db.projects || [];
+  let allowedTasks = db.tasks || [];
+  const users = db.users || [];
+
+  if (req.user?.role === 'Project Manager') {
+    allowedProjects = allowedProjects.filter((p: any) => p.managerId === req.user?.id || (p.members || []).includes(req.user?.id));
+    const allowedProjectIds = new Set(allowedProjects.map((p: any) => p.id));
+    allowedTasks = allowedTasks.filter((t: any) => allowedProjectIds.has(t.projectId));
+  } else if (req.user?.role === 'Team Member') {
+    // Actually Team Members don't have access to reports based on Sidebar, but just in case
+    const allowedProjectIds = new Set(allowedProjects.filter((p: any) => (p.members || []).includes(req.user?.id)).map((p: any) => p.id));
+    allowedTasks = allowedTasks.filter((t: any) => t.assigneeId === req.user?.id);
+    allowedProjects = allowedProjects.filter((p: any) => allowedProjectIds.has(p.id));
+  }
 
   // Enhance projects with overdue tasks count and tasks array for reports
-  const projects = db.projects.map((p: any) => {
-    const pTasks = tasks.filter((t: any) => t.projectId === p.id);
+  const projects = allowedProjects.map((p: any) => {
+    const pTasks = allowedTasks.filter((t: any) => t.projectId === p.id);
     const overdue = pTasks.filter((t: any) => t.status !== 'Completed' && (t.priority === 'Critical' || t.priority === 'High')).length;
     return { ...p, _overdueCount: overdue, tasks: pTasks };
   });
 
   // Compute Task Completion Overview (pie chart)
-  const completedCount = tasks.filter((t: any) => t.status === 'Completed').length;
-  const pendingCount = tasks.filter((t: any) => t.status !== 'Completed' && t.priority !== 'Critical' && t.priority !== 'High').length;
-  const overdueCount = tasks.filter((t: any) => t.status !== 'Completed' && (t.priority === 'Critical' || t.priority === 'High')).length;
+  const completedCount = allowedTasks.filter((t: any) => t.status === 'Completed').length;
+  const pendingCount = allowedTasks.filter((t: any) => t.status !== 'Completed' && t.priority !== 'Critical' && t.priority !== 'High').length;
+  const overdueCount = allowedTasks.filter((t: any) => t.status !== 'Completed' && (t.priority === 'Critical' || t.priority === 'High')).length;
 
-  const totalTasks = tasks.length || 1; // avoid div by zero
+  const totalTasks = allowedTasks.length || 1; // avoid div by zero
   const pieData = [
     { name: 'Completed', value: Math.round((completedCount / totalTasks) * 100), color: '#3b82f6' },
     { name: 'Pending', value: Math.round((pendingCount / totalTasks) * 100), color: '#0ea5e9' },
@@ -1522,7 +1565,7 @@ app.get('/api/reports/data', authenticateToken, async (req: AuthenticatedRequest
 
   // Compute Team Performance
   const teamPerformance = users.map((u: any) => {
-    const userTasks = tasks.filter((t: any) => t.assigneeId === u.id);
+    const userTasks = allowedTasks.filter((t: any) => t.assigneeId === u.id);
     const completed = userTasks.filter((t: any) => t.status === 'Completed').length;
     const assigned = userTasks.length;
     const rate = assigned > 0 ? Math.round((completed / assigned) * 100) : 0;
@@ -1534,7 +1577,7 @@ app.get('/api/reports/data', authenticateToken, async (req: AuthenticatedRequest
   const trendMap = new Map();
   months.forEach(m => trendMap.set(m, { name: m, Completed: 0, Created: 0 }));
 
-  tasks.forEach((t: any) => {
+  allowedTasks.forEach((t: any) => {
     if (t.createdAt) {
       const date = new Date(t.createdAt);
       if (!isNaN(date.getTime())) {

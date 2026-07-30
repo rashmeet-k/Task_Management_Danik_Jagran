@@ -76,8 +76,11 @@ export const ProjectDetails: React.FC = () => {
     { id: 'members', name: 'Members' },
     { id: 'calendar', name: 'Calender' },
     { id: 'documents', name: 'Documents' },
-    { id: 'activity', name: 'Activity' },
   ];
+
+  if (user?.role === 'Admin') {
+    tabs.push({ id: 'activity', name: 'Activity' });
+  }
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
