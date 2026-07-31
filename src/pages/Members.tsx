@@ -174,7 +174,6 @@ export const Members: React.FC = () => {
     setFormPhone('');
     setFormDept('');
     setFormRole('Team Member');
-    setFormBureau('Kanpur Bureau / Print');
     setFormPass('');
     setShowForm(false);
   };
