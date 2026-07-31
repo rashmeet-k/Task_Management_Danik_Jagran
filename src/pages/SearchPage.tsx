@@ -5,7 +5,7 @@ import { Search, FolderClosed, CheckSquare, Users, Eye, History, Trash2, Activit
 
 export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   const query = searchParams.get('q') || '';
   const [searchInput, setSearchInput] = useState(query);

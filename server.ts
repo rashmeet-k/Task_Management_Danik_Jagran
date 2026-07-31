@@ -103,10 +103,6 @@ const authenticateToken = async (req: AuthenticatedRequest, res: Response, next:
         userInDb.id = decodedUid;
         needsSave = true;
       }
-      if (isAdminEmail && userInDb.role !== 'Admin') {
-        userInDb.role = 'Admin';
-        needsSave = true;
-      }
       if (needsSave) {
         await writeDbDataAsync(db);
       }
@@ -215,7 +211,13 @@ app.get('/api/dashboard/stats', authenticateToken, async (req: AuthenticatedRequ
   } else {
     // Team Member
     const myTasks = db.tasks.filter((t: any) => t.assigneeId === userId);
+    const myProjects = db.projects.filter((p: any) => 
+      (p.members || []).includes(userId) ||
+      db.tasks.some((t: any) => (t.projectId === p.id || String(t.projectId) === String(p._id) || String(t.projectId) === String(p.id)) && t.assigneeId === userId)
+    );
     dashboardStats = {
+      totalProjects: myProjects.length,
+      activeProjects: myProjects.filter((p: any) => p.status === 'In Progress').length,
       totalTasks: myTasks.length,
       completedTasks: myTasks.filter((t: any) => t.status === 'Completed').length,
       pendingTasks: myTasks.filter((t: any) => t.status !== 'Completed').length,
@@ -227,7 +229,10 @@ app.get('/api/dashboard/stats', authenticateToken, async (req: AuthenticatedRequ
   if (role === 'Project Manager') {
     filteredProjects = db.projects.filter((p: any) => p.managerId === userId || (p.members || []).includes(userId));
   } else if (role === 'Team Member') {
-    filteredProjects = db.projects.filter((p: any) => (p.members || []).includes(userId));
+    filteredProjects = db.projects.filter((p: any) => 
+      (p.members || []).includes(userId) ||
+      db.tasks.some((t: any) => (t.projectId === p.id || String(t.projectId) === String(p._id) || String(t.projectId) === String(p.id)) && t.assigneeId === userId)
+    );
   }
 
   res.json({
@@ -308,8 +313,8 @@ app.get('/api/projects', authenticateToken, async (req: AuthenticatedRequest, re
 });
 
 app.post('/api/projects', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  if (req.user?.role === 'Team Member') {
-    res.status(403).json({ message: 'Forbidden: Team Members cannot create projects' });
+  if (req.user?.role !== 'Admin') {
+    res.status(403).json({ message: 'Forbidden: Only Admins can create projects' });
     return;
   }
 
@@ -1539,7 +1544,10 @@ app.get('/api/reports/data', authenticateToken, async (req: AuthenticatedRequest
     allowedTasks = allowedTasks.filter((t: any) => allowedProjectIds.has(t.projectId));
   } else if (req.user?.role === 'Team Member') {
     // Actually Team Members don't have access to reports based on Sidebar, but just in case
-    const allowedProjectIds = new Set(allowedProjects.filter((p: any) => (p.members || []).includes(req.user?.id)).map((p: any) => p.id));
+    const allowedProjectIds = new Set(allowedProjects.filter((p: any) => 
+      (p.members || []).includes(req.user?.id) ||
+      db.tasks.some((t: any) => (t.projectId === p.id || String(t.projectId) === String(p._id) || String(t.projectId) === String(p.id)) && t.assigneeId === req.user?.id)
+    ).map((p: any) => p.id));
     allowedTasks = allowedTasks.filter((t: any) => t.assigneeId === req.user?.id);
     allowedProjects = allowedProjects.filter((p: any) => allowedProjectIds.has(p.id));
   }
