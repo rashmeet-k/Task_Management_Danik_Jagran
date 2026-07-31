@@ -19,7 +19,6 @@ export const Members: React.FC = () => {
   const [formPhone, setFormPhone] = useState('');
   const [formDept, setFormDept] = useState('');
   const [formRole, setFormRole] = useState<'Admin' | 'Project Manager' | 'Team Member'>('Team Member');
-  const [formBureau, setFormBureau] = useState('Kanpur Bureau / Print');
   const [formPass, setFormPass] = useState('');
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -60,7 +59,7 @@ export const Members: React.FC = () => {
       phone: formPhone,
       department: formDept,
       role: formRole,
-      bureau: formBureau
+      
     };
     if (formPass) {
       body.password = formPass;
@@ -82,7 +81,7 @@ export const Members: React.FC = () => {
       if (res.ok) {
         const uId = user?.id || (user as any)?._id;
         if (editId === uId || (editId && String(editId) === String(uId))) {
-          updateProfile({ name: formName, phone: formPhone, department: formDept, role: formRole, bureau: formBureau });
+          updateProfile({ name: formName, phone: formPhone, department: formDept, role: formRole,  });
           if (formRole !== user?.role) {
             setTimeout(fetchProfile, 500); // re-fetch to assure all state updates
           }
@@ -105,7 +104,6 @@ export const Members: React.FC = () => {
     setFormPhone(u.phone);
     setFormDept(u.department);
     setFormRole(u.role);
-    setFormBureau(u.bureau);
     setFormPass('');
     setShowForm(true);
   };
@@ -273,7 +271,7 @@ export const Members: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-sans font-bold text-slate-500 uppercase">Role</label>
               <select
@@ -284,20 +282,6 @@ export const Members: React.FC = () => {
                 <option value="Admin">Admin</option>
                 <option value="Project Manager">Project Manager</option>
                 <option value="Team Member">Team Member</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-sans font-bold text-slate-500 uppercase">Bureau / Edition</label>
-              <select
-                value={formBureau}
-                onChange={(e) => setFormBureau(e.target.value)}
-                className="bg-slate-50 border border-slate-200 outline-none p-3 rounded-xl text-xs font-sans text-slate-800 focus:border-blue-500 focus:bg-white transition-colors"
-              >
-                <option>Kanpur Bureau / Print</option>
-                <option>Delhi Bureau / Digital</option>
-                <option>Noida Bureau / Print</option>
-                <option>Mumbai Bureau / Print</option>
               </select>
             </div>
 
@@ -395,7 +379,6 @@ export const Members: React.FC = () => {
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="font-sans font-bold text-[10px] sm:text-xs text-slate-800 truncate block">{u.name}</span>
-                        <span className="font-sans text-[10px] text-slate-400 uppercase font-medium truncate block">{u.bureau}</span>
                       </div>
                     </div>
                   </td>
@@ -488,7 +471,6 @@ export const Members: React.FC = () => {
                 <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wide">
                   {viewUser.role}
                 </span>
-                <span className="text-sm font-medium text-slate-500">{viewUser.bureau}</span>
               </div>
             </div>
             

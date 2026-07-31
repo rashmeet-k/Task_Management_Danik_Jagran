@@ -100,6 +100,7 @@ export const SettingsPage: React.FC = () => {
   // Handle Avatar Change
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (e.target) e.target.value = ''; // Allow re-uploading the same file
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -166,8 +167,6 @@ export const SettingsPage: React.FC = () => {
     e.stopPropagation();
     if (!user?.id || !user.avatar) return;
     
-    if (!window.confirm('Are you sure you want to delete your profile picture?')) return;
-
     setIsUploadingAvatar(true);
     setAvatarError('');
     setAvatarMsg('');
@@ -405,17 +404,17 @@ export const SettingsPage: React.FC = () => {
                 <Loader2 className="w-5 h-5 text-white animate-spin" />
               ) : (
                 <>
-                  <button 
-                    onClick={() => {
-                      if (user?.avatar) {
-                        window.open(user.avatar, '_blank');
-                      }
-                    }}
-                    title="View Profile Picture"
-                    className="p-1 hover:bg-white/20 rounded-full transition-colors"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-white" />
-                  </button>
+                  {user?.avatar && (
+                    <a 
+                      href={user.avatar}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="View Profile Picture"
+                      className="p-1 hover:bg-white/20 rounded-full transition-colors inline-flex"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-white" />
+                    </a>
+                  )}
                   <button 
                     onClick={() => fileInputRef.current?.click()}
                     title="Change Profile Picture"
@@ -554,7 +553,7 @@ export const SettingsPage: React.FC = () => {
                   <User className="w-4 h-4 text-[#00adef]" /> Personal Profile Details
                 </h2>
                 <p className="text-xs text-slate-500 font-sans mt-0.5">
-                  Update your contact information, full display name, and bureau department.
+                  Update your contact information and full display name.
                 </p>
               </div>
             </div>
@@ -649,20 +648,8 @@ export const SettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Bureau & Role Read-Only Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-sans font-bold text-slate-400 uppercase flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-slate-400" /> Edition Bureau
-                  </label>
-                  <input
-                    type="text"
-                    disabled
-                    value={user?.bureau || 'Kanpur Bureau / Print'}
-                    className="bg-slate-100 border border-slate-200 outline-none p-3 rounded-xl text-xs font-sans text-slate-500 cursor-not-allowed"
-                  />
-                </div>
-
+              {/* Role Read-Only Field */}
+              <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-sans font-bold text-slate-400 uppercase flex items-center gap-1">
                     <Shield className="w-3 h-3 text-slate-400" /> Access Role
@@ -831,11 +818,6 @@ export const SettingsPage: React.FC = () => {
                 <span className="font-sans text-xs font-bold text-emerald-600 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Active Account
                 </span>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-1">
-                <span className="text-[10px] font-sans font-bold text-slate-400 uppercase">Bureau Registration</span>
-                <span className="font-sans text-xs text-slate-800 font-semibold">{user?.bureau || 'Kanpur Bureau / Print'}</span>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-1">

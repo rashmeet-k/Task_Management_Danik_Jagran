@@ -10,7 +10,7 @@ export interface NotificationPreferences {
 export interface User {
   empId?: string;
   id: string;
-  bureau: string;
+  
   name: string;
   email: string;
   role: 'Admin' | 'Project Manager' | 'Team Member';

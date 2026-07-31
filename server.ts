@@ -36,7 +36,14 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '-'));
+  }
+});
 const upload = multer({ storage });
 
 export interface AuthenticatedRequest extends Request {
@@ -46,7 +53,6 @@ export interface AuthenticatedRequest extends Request {
     email: string;
     role: string;
     avatar: string;
-    bureau: string;
   };
 }
 
@@ -126,7 +132,6 @@ const authenticateToken = async (req: AuthenticatedRequest, res: Response, next:
         email: decodedEmail || '',
         role: role,
         avatar: decodedPicture || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-        bureau: 'Kanpur Bureau / Print',
         active: true,
         department: 'Editorial',
         phone: '',
@@ -1155,7 +1160,6 @@ app.get('/api/users/me', authenticateToken, async (req: AuthenticatedRequest, re
         role: (req.user.email.toLowerCase() === 'admin@example.com' || req.user.email.toLowerCase() === 'rashmeet1309@gmail.com') ? 'Admin' : 'Team Member',
         phone: '',
         department: 'N/A',
-        bureau: 'Kanpur Bureau / Print',
         taskCount: '0/0',
         active: true,
         avatar: (req.user as any).picture || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
@@ -1183,7 +1187,7 @@ app.get('/api/users', authenticateToken, async (req: Request, res: Response) => 
 
 app.post('/api/users', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const db = await getDbDataAsync();
-  const { name, email, role, phone, department, bureau, password } = req.body;
+  const { name, email, role, phone, department, password } = req.body;
 
   const exists = db.users.some((u: any) => u.email.toLowerCase() === email.toLowerCase());
   
@@ -1224,7 +1228,6 @@ app.post('/api/users', authenticateToken, async (req: AuthenticatedRequest, res:
   const newUser = {
     id: firebaseUid || ('U' + Date.now()),
     empId: empId,
-    bureau: bureau || 'Kanpur Bureau / Print',
     name,
     email,
     passwordHash,
@@ -1636,7 +1639,7 @@ app.get('/api/search', authenticateToken, async (req: Request, res: Response) =>
 
   const projects = (db.projects || []).filter((p: any) => (p.name || '').toLowerCase().includes(query) || (p.description || '').toLowerCase().includes(query));
   const tasks = (db.tasks || []).filter((t: any) => (t.name || '').toLowerCase().includes(query) || (t.description || '').toLowerCase().includes(query));
-  const users = (db.users || []).filter((u: any) => (u.name || '').toLowerCase().includes(query) || (u.email || '').toLowerCase().includes(query) || (u.department || u.bureau || '').toLowerCase().includes(query));
+  const users = (db.users || []).filter((u: any) => (u.name || '').toLowerCase().includes(query) || (u.email || '').toLowerCase().includes(query) || (u.department || '').toLowerCase().includes(query));
   
   const activities = (db.recentActivity || [])
     .filter((a: any) => (a.userName || '').toLowerCase().includes(query) || (a.action || '').toLowerCase().includes(query) || (a.entityName || '').toLowerCase().includes(query))

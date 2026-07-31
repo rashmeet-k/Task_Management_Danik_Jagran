@@ -5,21 +5,13 @@ import { Logo } from '../components/Logo';
 
 export const Login: React.FC = () => {
   const { login, register } = useAuth();
-  const [bureau, setBureau] = useState('Kanpur Bureau / Print');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // Registration fields
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('Team Member');
   
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const [isRegistering, setIsRegistering] = useState(false);
-
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,14 +27,11 @@ export const Login: React.FC = () => {
         await sendPasswordResetEmail(auth, email);
         alert('Password reset email sent successfully. Please check your inbox.');
         setIsResettingPassword(false);
-      } else if (isRegistering) {
-        if (!name) throw new Error("Name is required");
-        await register(email, password, name, role, bureau);
       } else {
-        await login(email, password, bureau);
+        await login(email, password);
       }
     } catch (err: any) {
-      setError(err.message || (isResettingPassword ? 'Error sending password reset email' : (isRegistering ? 'Registration failed' : 'Invalid email or password')));
+      setError(err.message || (isResettingPassword ? 'Error sending password reset email' : 'Invalid email or password'));
     } finally {
       setLoading(false);
     }
@@ -50,7 +39,6 @@ export const Login: React.FC = () => {
 
   const handleForgotPassword = () => {
     setIsResettingPassword(true);
-    setIsRegistering(false);
     setError('');
   };
 
@@ -97,23 +85,6 @@ export const Login: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             
-            {/* Bureau / Edition Desk select */}
-            {!isResettingPassword && (
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-sans font-bold text-slate-500 uppercase tracking-wider">Bureau / Edition Desk</label>
-                <select
-                  value={bureau}
-                  onChange={(e) => setBureau(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 outline-none p-3 rounded-xl text-xs font-sans text-slate-700 font-medium focus:border-blue-500 focus:bg-white transition-colors cursor-pointer"
-                >
-                  <option>Kanpur Bureau / Print</option>
-                  <option>Delhi Bureau / Digital</option>
-                  <option>Noida Bureau / Print</option>
-                  <option>Mumbai Bureau / Print</option>
-                </select>
-              </div>
-            )}
-
             {/* Email / ID input */}
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-sans font-bold text-slate-500 uppercase tracking-wider">Employee Email / ID</label>
@@ -127,21 +98,6 @@ export const Login: React.FC = () => {
               />
             </div>
             
-            {/* Name Input (Register Only) */}
-            {isRegistering && !isResettingPassword && (
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-sans font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 outline-none p-3 rounded-xl text-xs font-sans text-slate-800 focus:border-blue-500 focus:bg-white transition-colors"
-                />
-              </div>
-            )}
-
             {/* Password input */}
             {!isResettingPassword && (
               <div className="flex flex-col gap-1 relative">
@@ -199,22 +155,12 @@ export const Login: React.FC = () => {
               disabled={loading}
               className="bg-[#00adef] hover:bg-sky-500 disabled:bg-blue-400 text-white font-sans text-sm font-bold p-3 rounded-xl shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2 transition-all mt-2"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isResettingPassword ? 'Send Reset Link' : (isRegistering ? 'Register' : 'Login'))}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isResettingPassword ? 'Send Reset Link' : 'Login')}
             </button>
 
-            {/* Toggle Register */}
-            <div className="text-center mt-2 flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegistering(!isRegistering);
-                  setIsResettingPassword(false);
-                }}
-                className="text-xs text-slate-500 hover:text-slate-800 transition-colors"
-              >
-                {isRegistering ? 'Already have an account? Login' : "Don't have an account? Register"}
-              </button>
-              {isResettingPassword && (
+            {/* Back to Login for Password Reset */}
+            {isResettingPassword && (
+              <div className="text-center mt-2 flex flex-col gap-2">
                 <button
                   type="button"
                   onClick={() => setIsResettingPassword(false)}
@@ -222,8 +168,8 @@ export const Login: React.FC = () => {
                 >
                   Back to Login
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
           </form>
         </div>

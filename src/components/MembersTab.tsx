@@ -220,7 +220,6 @@ export const MembersTab: React.FC<MembersTabProps> = ({ projectId, token, role }
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="font-sans font-bold text-[10px] sm:text-xs text-slate-800 truncate block">{u.name}</span>
-                      <span className="font-sans text-[9px] text-slate-400 uppercase font-medium hidden sm:block truncate">{u.bureau}</span>
                     </div>
                   </div>
                 </td>

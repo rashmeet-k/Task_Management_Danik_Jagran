@@ -8,8 +8,8 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string, bureau: string) => Promise<void>;
-  register: (email: string, password: string, name: string, role: string, bureau: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string, role: string) => Promise<void>;
   logout: () => void;
   updateProfile: (updated: Partial<User>) => void;
   fetchProfile: () => Promise<void>;
@@ -100,7 +100,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: email,
           name: email.split('@')[0],
           role: fallbackRole,
-          bureau: 'Kanpur Bureau / Print',
           active: true,
           avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
         };
@@ -119,7 +118,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: email,
         name: email.split('@')[0],
         role: fallbackRole,
-        bureau: 'Kanpur Bureau / Print',
         active: true,
         avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
       };
@@ -136,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, password: string, bureau: string) => {
+  const login = async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const userToken = await userCredential.user.getIdToken();
     localStorage.setItem('token', userToken);
@@ -144,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchProfileData(userCredential.user.uid, userCredential.user.email || '');
   };
 
-  const register = async (email: string, password: string, name: string, role: string, bureau: string) => {
+  const register = async (email: string, password: string, name: string, role: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
     
@@ -159,7 +157,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name,
         email,
         role: assignedRole,
-        bureau,
         active: true,
         department: '',
         phone: '',
